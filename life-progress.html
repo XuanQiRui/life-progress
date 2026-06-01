@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>人生进度条 · 你还剩多少时间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(145deg, #0b0c0e 0%, #1a1c20 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+            padding: 1.5rem;
+            margin: 0;
+            color: #eaeef2;
+        }
+        .card {
+            max-width: 580px;
+            width: 100%;
+            background: rgba(28, 30, 35, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 2.5rem;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+            transition: all 0.2s ease;
+        }
+        h1 {
+            font-size: 2.3rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        h1 span {
+            background: #f5b042;
+            color: #0b0c0e;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            letter-spacing: normal;
+        }
+        .sub {
+            color: #9aa1ac;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            border-left: 3px solid #f5b042;
+            padding-left: 1rem;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+        label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #7c8490;
+        }
+        input, select {
+            background: rgba(10, 11, 13, 0.7);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            font-size: 1.1rem;
+            color: #f0f3f8;
+            outline: none;
+            transition: 0.2s;
+            backdrop-filter: blur(8px);
+            font-family: inherit;
+        }
+        input:focus, select:focus {
+            border-color: #f5b042;
+            box-shadow: 0 0 0 3px rgba(245,176,66,0.2);
+        }
+        .life-expectancy {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .life-expectancy select {
+            flex: 1;
+            min-width: 140px;
+        }
+        .button {
+            background: #f5b042;
+            border: none;
+            border-radius: 1.2rem;
+            padding: 1rem 1.8rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #0b0c0e;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            letter-spacing: 0.02em;
+            margin-top: 0.5rem;
+        }
+        .button:hover {
+            background: #ffc260;
+            transform: scale(1.02);
+        }
+        .results {
+            margin-top: 2.2rem;
+            display: none;
+            animation: fadeUp 0.5s ease;
+        }
+        .progress-container {
+            margin: 1.2rem 0 1.8rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: 40px;
+            height: 26px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f5b042, #f28c38);
+            border-radius: 40px;
+            transition: width 1s cubic-bezier(0.22, 0.61, 0.36, 1);
+            position: relative;
+        }
+        .percent-text {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #0b0c0e;
+            mix-blend-mode: difference;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1.8rem 0 1rem;
+        }
+        .stat-item {
+            background: rgba(20, 22, 27, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 1.2rem;
+            padding: 1rem 0.8rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #f5b042;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #8e96a3;
+            margin-top: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .message {
+            font-size: 1rem;
+            color: #b8c1cc;
+            margin-top: 1.5rem;
+            line-height: 1.6;
+            background: rgba(245,176,66,0.08);
+            padding: 1rem 1.2rem;
+            border-radius: 1.2rem;
+            border-left: 3px solid #f5b042;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .footer-note {
+            font-size: 0.7rem;
+            color: #5b6470;
+            text-align: center;
+            margin-top: 1.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            ⏳ 人生进度条
+            <span>BETA</span>
+        </h1>
+        <div class="sub">基于平均预期寿命 · 请坐稳再看</div>
+
+        <div class="input-group">
+            <label>📅 你的出生日期</label>
+            <input type="date" id="birthdayInput" value="1995-06-15">
+        </div>
+
+        <div class="life-expectancy">
+            <label style="margin-right: auto;">⏱️ 预期寿命</label>
+            <select id="expectancySelect">
+                <option value="78.2">中国平均 (78.2岁)</option>
+                <option value="80" selected>乐观点 · 80岁</option>
+                <option value="85">长寿 · 85岁</option>
+                <option value="90">人瑞 · 90岁</option>
+            </select>
+        </div>
+
+        <button class="button" id="calculateBtn">
+            <span>🔮</span> 查看我的进度
+        </button>
+
+        <div class="results" id="results">
+            <div class="progress-container">
+                <div class="progress-fill" id="progressFill">
+                    <span class="percent-text" id="percentDisplay">0%</span>
+                </div>
+            </div>
+
+            <div class="stat-grid" id="statGrid"></div>
+            <div class="message" id="personalMessage"></div>
+        </div>
+        <div class="footer-note">* 数据基于公开预期寿命统计，仅供反思与娱乐</div>
+    </div>
+
+    <script>
+        (function() {
+            const birthdayInput = document.getElementById('birthdayInput');
+            const expectancySelect = document.getElementById('expectancySelect');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resultsDiv = document.getElementById('results');
+            const progressFill = document.getElementById('progressFill');
+            const percentDisplay = document.getElementById('percentDisplay');
+            const statGrid = document.getElementById('statGrid');
+            const personalMessage = document.getElementById('personalMessage');
+
+            // 默认今天日期不可超过今天
+            function setMaxDate() {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                birthdayInput.setAttribute('max', `${yyyy}-${mm}-${dd}`);
+            }
+            setMaxDate();
+
+            function calculate() {
+                const birthdayValue = birthdayInput.value;
+                if (!birthdayValue) {
+                    alert('请选择出生日期');
+                    return;
+                }
+
+                const birthDate = new Date(birthdayValue);
+                const today = new Date();
+                
+                if (birthDate > today) {
+                    alert('出生日期不能在未来');
+                    return;
+                }
+
+                const lifeExpectancy = parseFloat(expectancySelect.value);
+                
+                // 计算已活天数
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const daysLived = Math.floor((today - birthDate) / msPerDay);
+                
+                // 总预期天数 (简化：按年*365.25，考虑闰年)
+                const totalDays = Math.floor(lifeExpectancy * 365.25);
+                
+                // 剩余天数
+                const daysLeft = totalDays - daysLived;
+                const daysLeftFixed = daysLeft > 0 ? daysLeft : 0;
+                
+                // 百分比
+                let percent = (daysLived / totalDays) * 100;
+                percent = Math.min(100, Math.max(0, percent));
+                const percentRounded = percent.toFixed(2);
+                
+                // 更新进度条
+                progressFill.style.width = `${percent}%`;
+                percentDisplay.textContent = `${percentRounded}%`;
+                
+                // 构建有趣的换算 (基于剩余天数)
+                const remainingYears = daysLeftFixed / 365.25;
+                
+                // 火锅：假设每周1次 → 每年约52次
+                const hotpotLeft = Math.floor(remainingYears * 52);
+                // 电影：每月2次 → 每年24次
+                const moviesLeft = Math.floor(remainingYears * 24);
+                // 旅行：每年1次
+                const tripsLeft = Math.floor(remainingYears * 1);
+                // 看日出：剩余天数本身就等于次数（若每天看）
+                const sunrisesLeft = daysLeftFixed;
+                // 读的书：每年6本
+                const booksLeft = Math.floor(remainingYears * 6);
+                
+                // 填充统计卡片
+                statGrid.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-number">${daysLived.toLocaleString()}</div>
+                        <div class="stat-label">已活天数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${daysLeftFixed.toLocaleString()}</div>
+                        <div class="stat-label">剩余天数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">🍲 ${hotpotLeft}</div>
+                        <div class="stat-label">还能吃火锅(次)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">🎬 ${moviesLeft}</div>
+                        <div class="stat-label">还能看电影</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">✈️ ${tripsLeft}</div>
+                        <div class="stat-label">还能长途旅行</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">📚 ${booksLeft}</div>
+                        <div class="stat-label">还能读书(本)</div>
+                    </div>
+                `;
+                
+                // 生成个性化戳心文案
+                let messageText = '';
+                if (percent >= 50) {
+                    messageText = `你已经走完了人生的 <strong>${percentRounded}%</strong> 。如果把人生比作一天，现在大约是下午${Math.floor(percent/100*24)}点。剩下的火锅、电影和日出，都有限。`;
+                } else if (percent >= 30) {
+                    messageText = `进度 ${percentRounded}% —— 黄金时间正在流逝。你还有 ${daysLeftFixed.toLocaleString()} 天，看上去很多，但换成“还能吃${hotpotLeft}次火锅”，是不是瞬间具体了？`;
+                } else {
+                    messageText = `人生刚走过 ${percentRounded}% ，似乎很充裕。但注意，剩下的火锅次数其实不足 ${hotpotLeft} 次。把时间花在真正重要的事情上。`;
+                }
+                
+                if (daysLeftFixed <= 0) {
+                    messageText = `你已经超过了预期寿命，每一天都是额外的礼物。🔥`;
+                    progressFill.style.width = '100%';
+                    percentDisplay.textContent = '100%+';
+                }
+                
+                personalMessage.innerHTML = messageText;
+                resultsDiv.style.display = 'block';
+            }
+
+            calculateBtn.addEventListener('click', calculate);
+            
+            // 可选：按回车触发
+            birthdayInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') calculate();
+            });
+            
+            // 首次加载自动计算一次(如果已经有日期)
+            window.addEventListener('load', () => {
+                if (birthdayInput.value) {
+                    calculate();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
